@@ -2,7 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require("dotenv"); // For using process.env
-// const scrapeRoutes = require('./Routes/scrapeRoutes');
+const scrapeRoutes = require('./Routes/scrapeRoutes');
 
 const app = express();
 
@@ -25,7 +25,7 @@ mongoose.connect(mongoURL)
     });
 
 // Routes
-// app.use('/api/scrape', scrapeRoutes);
+app.use('/api/scrape', scrapeRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
