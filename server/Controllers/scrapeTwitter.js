@@ -36,11 +36,10 @@ exports.scrapeTwitter = async (req, res) => {
         const waitForAtLeastTenTweets = async (page, selector, timeout = 30000) => {
             const startTime = Date.now();
 
-            while (Date.now() - startTime < 5000) {
-                const tweetElements = await page.$$(selector); // Get all elements matching the selector
-                console.log(selector);
+            while (Date.now() - startTime < timeout) {
+                const tweetElements = await page.$$(selector);
 
-                if (tweetElements.length >= 10) {
+                if (tweetElements.length > 0) {
                     return; // Exit the loop if at least 10 items are found
                 }
 
@@ -50,26 +49,14 @@ exports.scrapeTwitter = async (req, res) => {
                 });
                 await new Promise(resolve => setTimeout(resolve, 3000));
             }
-
-            // throw new Error('Timeout exceeded: Could not find at least 10 tweets.');
         };
         try {
             await waitForAtLeastTenTweets(page, 'article[data-testid="tweet"]');
-            console.log('Found at least 10 tweets.');
-
-            // Wait for tweets to load
-            // await page.waitForSelector('.article', { timeout: 20000 });
-            // await page.waitForSelector('article[data-testid="tweet"]', { timeout: 50000 });
-            // try {
-            //     await page.waitForSelector('article[data-testid="tweet"]', { timeout: 60000 });
-            // } catch (e) {
-            //     console.warn('Tweets not found. Continuing without them.');
-            // }
-
             // Extract tweets from the page
             const tweets = await page.evaluate(() => {
                 // Select all tweet articles
                 const tweetElements = Array.from(document.querySelectorAll('article[data-testid="tweet"]'));
+
                 return tweetElements.map(el => {
                     // Extract the tweet text using the appropriate selector
                     const tweetTextElement = el.querySelector('div[data-testid="tweetText"]');
@@ -88,11 +75,11 @@ exports.scrapeTwitter = async (req, res) => {
                         link: tweetLink,
                         date: tweetDate,
                     };
-                }).filter(tweet => tweet.text); // Filter out tweets with no text
+                }).filter(tweet => tweet.text) // Filter out tweets with no text
             });
+            console.log(tweets);
 
             await browser.close();
-
 
             // Log and handle cases where no tweets are found
             if (!tweets || tweets.length === 0) {
