@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ArticleList from '../components/ArticleList';
-import { fetchArticles } from '../services/api';
+import { fetchTrumpAndBidenArticles } from '../services/api';
 
 interface Article {
   title: string;
@@ -14,14 +14,11 @@ const HomePage: React.FC = () => {
   const [view, setView] = useState<'both' | 'trump' | 'biden'>('both');
 
   useEffect(() => {
-    // Fetch Trump articles
-    fetchArticles('trump')
-      .then((data) => setTrumpArticles(data))
-      .catch((err) => setError(err.message));
-
-    // Fetch Biden articles
-    fetchArticles('biden')
-      .then((data) => setBidenArticles(data))
+    fetchTrumpAndBidenArticles()
+      .then(({ trump, biden }) => {
+        setTrumpArticles(trump);
+        setBidenArticles(biden);
+      })
       .catch((err) => setError(err.message));
   }, []);
 
