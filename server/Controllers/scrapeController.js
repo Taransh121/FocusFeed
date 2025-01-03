@@ -11,6 +11,10 @@ exports.scrapeCNN = async (req, res) => {
 
         // Go to CNN search page with the query parameter
         await page.goto(`https://edition.cnn.com/search?q=${query}`, { waitUntil: 'networkidle2' });
+        // await page.goto(`https://edition.cnn.com/search?q=${query}`, { waitUntil: 'domcontentloaded' });
+
+        // Ensure the page has enough time to load dynamic content
+        // await page.waitForTimeout(3000);
 
         // Wait for the results list to load using the correct selector
         await page.waitForSelector('.search__results', { timeout: 20000 });
@@ -32,7 +36,11 @@ exports.scrapeCNN = async (req, res) => {
         });
 
         await browser.close();
-
+        // Log and handle cases where no articles are found
+        if (!articles || articles.length === 0) {
+            console.warn('No articles found for the query.');
+            return res.status(200).json({ success: true, data: [] });
+        }
         // Check if there are articles and save them to the database
         if (articles.length > 0) {
             await Article.insertMany(articles, { ordered: false }).catch(err => {
