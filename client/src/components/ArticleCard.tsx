@@ -7,7 +7,7 @@ interface ArticleCardProps {
 
 const ArticleCard: React.FC<ArticleCardProps> = ({ title, link }) => {
   return (
-    <div className="border p-4 rounded shadow-md hover:shadow-lg transition">
+    <div className="border border-green-400 p-4 rounded shadow-md hover:shadow-lg transition">
       <h3 className="text-lg font-semibold mb-2">{title}</h3>
       <a
         href={link}

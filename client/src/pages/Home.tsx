@@ -23,7 +23,7 @@ const HomePage: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-gradient-to-r from-blue-50 to-blue-100">
       <h1 className="text-2xl font-bold mb-6">Scraped CNN Articles</h1>
       {error && <p className="text-red-500">{error}</p>}
 
