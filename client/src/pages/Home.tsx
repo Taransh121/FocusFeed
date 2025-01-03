@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ArticleList from '../components/ArticleList';
 import { fetchTrumpAndBidenArticles } from '../services/api';
+import { Link } from 'react-router-dom';
 
 interface Article {
   title: string;
@@ -24,7 +25,17 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="p-6 bg-gradient-to-r from-blue-50 to-blue-100">
-      <h1 className="text-2xl font-bold mb-6">Scraped CNN Articles</h1>
+      {/* Header with Title and Link */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Scraped CNN Articles</h1>
+        <Link
+          to="/tweets"
+          className="px-4 py-2 bg-black text-white rounded hover:bg-red-600"
+        >
+          Go to Tweets Page
+        </Link>
+      </div>
+
       {error && <p className="text-red-500">{error}</p>}
 
       {/* Toggle Buttons */}

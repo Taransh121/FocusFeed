@@ -6,7 +6,7 @@ exports.scrapeTwitter = async (req, res) => {
     const twitterUsername = 'TaranshChellani'; // Replace with your Twitter username
     const twitterPassword = 'Qwerty@123'; // Replace with your Twitter password
 
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
 
     try {
