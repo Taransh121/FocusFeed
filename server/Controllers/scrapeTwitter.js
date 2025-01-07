@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer');
-const Tweet = require('../Models/tweet'); // Assuming you have a Tweet model for MongoDB
+const Tweet = require('../Models/tweet'); // MongoDB Tweet model
 
 exports.scrapeTwitter = async (req, res) => {
     const searchType = req.query.search || 'both';
@@ -41,11 +41,12 @@ exports.scrapeTwitter = async (req, res) => {
                         const tweetUrlElement = tweet.querySelector('a');
                         const tweetUrl = tweetUrlElement ? tweetUrlElement.href : null;
                         return {
-                            content: contentElement ? contentElement.innerText.trim() : null,
-                            url: tweetUrl,
+                            text: contentElement ? contentElement.innerText.trim() : null,
+                            link: tweetUrl,
+                            date: new Date().toISOString(), // Current timestamp
                         };
                     })
-                    .filter(tweet => tweet.content && tweet.url); // Ensure we have both content and URL
+                    .filter(tweet => tweet.text && tweet.link); // Ensure we have both content and URL
             });
         };
 
@@ -60,14 +61,18 @@ exports.scrapeTwitter = async (req, res) => {
             topTweets = await scrapeTweets(searchType);  // Scrape only the specified search type (Trump or Biden)
         }
 
-        console.log("Latest Tweets:");
-        topTweets.forEach((tweet, index) => {
-            console.log(`${index + 1}. Content: ${tweet.content}`);
-            console.log(`   URL: ${tweet.url}`);
-        });
+        console.log("Storing tweets in MongoDB...");
+        // Save each tweet to MongoDB
+        const savedTweets = await Tweet.insertMany(topTweets);
+
+        console.log(`Successfully stored ${savedTweets.length} tweets.`);
+
+        return res.status(200).json({ message: "Tweets scraped and stored successfully", data: savedTweets });
     } catch (error) {
         console.error("An error occurred during the scraping process:", error);
         await page.screenshot({ path: 'error_screenshot.png' });
         return res.status(500).json({ error: "Scraping failed. Check server logs and screenshot for details." });
+    } finally {
+        await browser.close();
     }
 };
