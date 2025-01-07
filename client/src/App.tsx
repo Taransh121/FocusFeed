@@ -1,14 +1,14 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import HomePage from './pages/Home';
+import NewsPage from './pages/NewsPage';
 import TweetsPage from './pages/TweetsPage';
 
 const App: React.FC = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/tweets" element={<TweetsPage />} />
+        <Route path="/" element={<TweetsPage />} />
+        <Route path="/news" element={<NewsPage />} />
       </Routes>
     </Router>
   );

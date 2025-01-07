@@ -8,7 +8,7 @@ interface Article {
   link: string;
 }
 
-const HomePage: React.FC = () => {
+const NewsPage: React.FC = () => {
   const [trumpArticles, setTrumpArticles] = useState<Article[]>([]);
   const [bidenArticles, setBidenArticles] = useState<Article[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +29,7 @@ const HomePage: React.FC = () => {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Scraped CNN Articles</h1>
         <Link
-          to="/tweets"
+          to="/"
           className="px-4 py-2 bg-black text-white rounded hover:bg-red-600"
         >
           Go to Tweets Page
@@ -80,4 +80,4 @@ const HomePage: React.FC = () => {
   );
 };
 
-export default HomePage;
+export default NewsPage;

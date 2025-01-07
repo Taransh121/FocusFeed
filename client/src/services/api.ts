@@ -19,7 +19,8 @@ export const fetchArticles = async (query: string) => {
     };
   };
   export const fetchTweets=async(query:string)=>{
-    const response = await fetch(`http://localhost:8080/api/scrapeTwitter?search?q=${query}`); // Adjust URL to match your backend
+    // const response = await fetch(`http://localhost:8080/api/scrapeTwitter?search=${query}`); // Adjust URL to match your backend
+    const response = await fetch(`http://localhost:8080/api/scrapeTwitter`); // Adjust URL to match your backend
     if (!response.ok) {
       throw new Error(`Failed to fetch articles for ${query}`);
     }
