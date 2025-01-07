@@ -2,108 +2,72 @@ const puppeteer = require('puppeteer');
 const Tweet = require('../Models/tweet'); // Assuming you have a Tweet model for MongoDB
 
 exports.scrapeTwitter = async (req, res) => {
-    const query = req.query.query || 'Trump'; // Default to 'Trump' if no query parameter is passed
-    const twitterUsername = 'TaranshChellani'; // Replace with your Twitter username
-    const twitterPassword = 'Qwerty@123'; // Replace with your Twitter password
-
-    const browser = await puppeteer.launch({ headless: true });
+    const searchType = req.query.search || 'both';
+    const browser = await puppeteer.launch({ headless: false, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     const page = await browser.newPage();
 
     try {
-        // Go to Twitter login page
-        await page.goto('https://x.com/i/flow/login', { waitUntil: 'networkidle2' });
+        console.log("Navigating to Twitter login page...");
+        await page.goto('https://x.com/login', { waitUntil: 'networkidle2' });
 
-        // Wait for the login form to load
+        console.log("Entering login credentials...");
         await page.waitForSelector('input[name="text"]', { timeout: 20000 });
-
-        // Enter username
-        await page.type('input[name="text"]', twitterUsername, { delay: 100 });
+        await page.type('input[name="text"]', process.env.twitterUsername);
         await page.keyboard.press('Enter');
-        // await page.waitForTimeout(2000);
 
-        // Enter password
+        console.log("Waiting for password input...");
         await page.waitForSelector('input[name="password"]', { timeout: 20000 });
-        await page.type('input[name="password"]', twitterPassword, { delay: 100 });
+        await page.type('input[name="password"]', process.env.twitterPassword);
         await page.keyboard.press('Enter');
-        // await page.waitForTimeout(5000);
 
-        console.log('Login successful.');
+        console.log("Waiting for successful login...");
+        await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 });
 
-        // Go to Twitter search page
-        const searchUrl = `https://x.com/search?q=${query}&src=typed_query&f=live`;
-        await page.goto(searchUrl, { waitUntil: 'networkidle2' });
-
-        const waitForAtLeastTenTweets = async (page, selector, timeout = 30000) => {
-            const startTime = Date.now();
-
-            while (Date.now() - startTime < timeout) {
-                const tweetElements = await page.$$(selector);
-
-                if (tweetElements.length > 0) {
-                    return; // Exit the loop if at least 10 items are found
-                }
-
-                // await page.evaluate(() => window.scrollBy(0, window.innerHeight)); // Scroll down to load more
-                await page.evaluate(() => {
-                    window.scrollTo(0, document.body.scrollHeight);
-                });
-                await new Promise(resolve => setTimeout(resolve, 3000));
-            }
-        };
-        try {
-            await waitForAtLeastTenTweets(page, 'article[data-testid="tweet"]');
-            // Extract tweets from the page
-            const tweets = await page.evaluate(() => {
-                // Select all tweet articles
-                const tweetElements = Array.from(document.querySelectorAll('article[data-testid="tweet"]'));
-
-                return tweetElements.map(el => {
-                    // Extract the tweet text using the appropriate selector
-                    const tweetTextElement = el.querySelector('div[data-testid="tweetText"]');
-                    const tweetText = tweetTextElement?.innerText.trim() || null;
-
-                    // Extract the tweet link
-                    const tweetLinkElement = el.querySelector('a[href*="/status/"]');
-                    const tweetLink = tweetLinkElement ? `https://x.com${tweetLinkElement.getAttribute('href')}` : null;
-
-                    // Extract the tweet date
-                    const tweetDateElement = el.querySelector('time');
-                    const tweetDate = tweetDateElement?.getAttribute('datetime') || null;
-
-                    return {
-                        text: tweetText,
-                        link: tweetLink,
-                        date: tweetDate,
-                    };
-                }).filter(tweet => tweet.text) // Filter out tweets with no text
-            });
-            console.log(tweets);
-
-            await browser.close();
-
-            // Log and handle cases where no tweets are found
-            if (!tweets || tweets.length === 0) {
-                console.warn('No tweets found for the query.');
-                return res.status(200).json({ success: true, data: [] });
-            }
-
-            // Save tweets to the database
-            if (tweets.length > 0) {
-                await Tweet.insertMany(tweets, { ordered: false }).catch(err => {
-                    if (err.code !== 11000) throw err; // Ignore duplicates
-                });
-            }
-
-
-            // Send the scraped tweets in the response
-            res.status(200).json({ success: true, data: tweets });
-        } catch (error) {
-            console.error('Error during scraping:', error);
-            res.status(500).json({ success: false, message: 'Failed to fetch tweets.' });
+        const loggedIn = await page.evaluate(() => document.querySelector('nav') !== null);
+        if (!loggedIn) {
+            return res.status(500).json({ error: "Login failed." });
         }
+
+        // Helper function to scrape tweets from a specific search term
+        const scrapeTweets = async (searchQuery) => {
+            const searchUrl = `https://x.com/search?q=${searchQuery}&src=typed_query&f=live`;
+            console.log(`Navigating to search page: ${searchUrl}`);
+            await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 60000 });
+
+            return await page.evaluate(() => {
+                return Array.from(document.querySelectorAll('article'))
+                    .map(tweet => {
+                        const contentElement = tweet.querySelector('div[lang]');
+                        const tweetUrlElement = tweet.querySelector('a');
+                        const tweetUrl = tweetUrlElement ? tweetUrlElement.href : null;
+                        return {
+                            content: contentElement ? contentElement.innerText.trim() : null,
+                            url: tweetUrl,
+                        };
+                    })
+                    .filter(tweet => tweet.content && tweet.url); // Ensure we have both content and URL
+            });
+        };
+
+        let topTweets = [];
+
+        // Handling "both" case where we scrape both Trump and Biden tweets
+        if (searchType === 'both') {
+            const trumpTweets = await scrapeTweets('trump');
+            const bidenTweets = await scrapeTweets('biden');
+            topTweets = [...trumpTweets, ...bidenTweets];  // Combine the tweets for both Trump and Biden
+        } else {
+            topTweets = await scrapeTweets(searchType);  // Scrape only the specified search type (Trump or Biden)
+        }
+
+        console.log("Latest Tweets:");
+        topTweets.forEach((tweet, index) => {
+            console.log(`${index + 1}. Content: ${tweet.content}`);
+            console.log(`   URL: ${tweet.url}`);
+        });
     } catch (error) {
-        console.error('Error during scraping:', error);
-        await browser.close();
-        res.status(500).json({ success: false, message: 'Failed to fetch tweets. Please try again later.' });
+        console.error("An error occurred during the scraping process:", error);
+        await page.screenshot({ path: 'error_screenshot.png' });
+        return res.status(500).json({ error: "Scraping failed. Check server logs and screenshot for details." });
     }
 };
