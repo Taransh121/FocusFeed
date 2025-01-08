@@ -40,7 +40,7 @@ const NewsPage: React.FC = () => {
     <div className="p-6 bg-gradient-to-r from-blue-50 to-blue-100 min-h-screen">
       {/* Header with Title and Navigation Link */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Scraped CNN Articles</h1>
+        <h1 className="text-2xl font-bold">Scraped CNN News</h1>
         <Link
           to="/"
           className="px-4 py-2 bg-black text-white rounded hover:bg-red-600"
@@ -65,13 +65,13 @@ const NewsPage: React.FC = () => {
           className={`px-4 py-2 rounded ${view === 'trump' ? 'bg-blue-500 text-white' : 'bg-gray-300'}`}
           onClick={() => setView('trump')}
         >
-          View Trump Articles
+          View Trump News
         </button>
         <button
           className={`px-4 py-2 rounded ${view === 'biden' ? 'bg-blue-500 text-white' : 'bg-gray-300'}`}
           onClick={() => setView('biden')}
         >
-          View Biden Articles
+          View Biden News
         </button>
       </div>
 
@@ -79,13 +79,13 @@ const NewsPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {(view === 'both' || view === 'trump') && (
           <div>
-            <h2 className="text-xl font-bold mb-4">Trump Articles</h2>
+            <h2 className="text-xl font-bold mb-4">Trump News</h2>
             <ArticleList articles={trumpArticles} />
           </div>
         )}
         {(view === 'both' || view === 'biden') && (
           <div>
-            <h2 className="text-xl font-bold mb-4">Biden Articles</h2>
+            <h2 className="text-xl font-bold mb-4">Biden News</h2>
             <ArticleList articles={bidenArticles} />
           </div>
         )}

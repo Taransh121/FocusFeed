@@ -1,4 +1,5 @@
 import React from 'react';
+import Sentiment from 'sentiment'; // Import sentiment library
 import ArticleCard from './ArticleCard';
 
 interface Article {
@@ -11,10 +12,24 @@ interface ArticleListProps {
 }
 
 const ArticleList: React.FC<ArticleListProps> = ({ articles }) => {
+  const sentiment = new Sentiment();
+
+  const getSentiment = (title: string) => {
+    const result = sentiment.analyze(title);
+    if (result.score > 0) return 'Positive';
+    if (result.score < 0) return 'Negative';
+    return 'Neutral';
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {articles.map((article, index) => (
-        <ArticleCard key={index} title={article.title} link={article.link} />
+        <ArticleCard
+          key={index}
+          title={article.title}
+          link={article.link}
+          sentiment={getSentiment(article.title)} // Pass sentiment to ArticleCard
+        />
       ))}
     </div>
   );
