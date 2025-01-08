@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import ArticleList from '../components/ArticleList';
 import { fetchTrumpAndBidenArticles } from '../services/api';
 import { Link } from 'react-router-dom';
@@ -12,20 +12,33 @@ const NewsPage: React.FC = () => {
   const [trumpArticles, setTrumpArticles] = useState<Article[]>([]);
   const [bidenArticles, setBidenArticles] = useState<Article[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const [view, setView] = useState<'both' | 'trump' | 'biden'>('both');
+  const isFetchCalled = useRef(false); // Prevent duplicate API calls
 
   useEffect(() => {
-    fetchTrumpAndBidenArticles()
-      .then(({ trump, biden }) => {
+    if (isFetchCalled.current) return; // Avoid duplicate API calls
+    isFetchCalled.current = true;
+
+    const fetchData = async () => {
+      try {
+        setLoading(true); // Set loading state
+        const { trump, biden } = await fetchTrumpAndBidenArticles();
         setTrumpArticles(trump);
         setBidenArticles(biden);
-      })
-      .catch((err) => setError(err.message));
-  }, []);
+        setLoading(false); // Reset loading state
+      } catch (err: any) {
+        setError(err.message); // Set error message
+        setLoading(false); // Ensure loading state is reset
+      }
+    };
+
+    fetchData();
+  }, []); // Runs only once on component mount
 
   return (
-    <div className="p-6 bg-gradient-to-r from-blue-50 to-blue-100">
-      {/* Header with Title and Link */}
+    <div className="p-6 bg-gradient-to-r from-blue-50 to-blue-100 min-h-screen">
+      {/* Header with Title and Navigation Link */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Scraped CNN Articles</h1>
         <Link
@@ -36,7 +49,9 @@ const NewsPage: React.FC = () => {
         </Link>
       </div>
 
+      {/* Error and Loading States */}
       {error && <p className="text-red-500">{error}</p>}
+      {loading && <p className="text-blue-500">Loading articles...</p>}
 
       {/* Toggle Buttons */}
       <div className="flex space-x-4 mb-6">
@@ -68,7 +83,6 @@ const NewsPage: React.FC = () => {
             <ArticleList articles={trumpArticles} />
           </div>
         )}
-
         {(view === 'both' || view === 'biden') && (
           <div>
             <h2 className="text-xl font-bold mb-4">Biden Articles</h2>

@@ -4,10 +4,10 @@ export const fetchArticles = async (query: string) => {
       throw new Error(`Failed to fetch articles for ${query}`);
     }
     return response.json().then((res) => res.data);
-  };
+};
   
   // Fetch both Trump and Biden articles
-  export const fetchTrumpAndBidenArticles = async () => {
+export const fetchTrumpAndBidenArticles = async () => {
     const [trumpArticles, bidenArticles] = await Promise.all([
       fetchArticles('trump'),
       fetchArticles('biden'),
@@ -17,16 +17,16 @@ export const fetchArticles = async (query: string) => {
       trump: trumpArticles,
       biden: bidenArticles,
     };
-  };
-  export const fetchTweets=async(query:string)=>{
+};
+export const fetchTweets=async(query:string)=>{
     // const response = await fetch(`http://localhost:8080/api/scrapeTwitter?search=${query}`); // Adjust URL to match your backend
     const response = await fetch(`http://localhost:8080/api/scrapeTwitter`); // Adjust URL to match your backend
     if (!response.ok) {
       throw new Error(`Failed to fetch articles for ${query}`);
     }
     return response.json().then((res) => res.data);
-  }
-  export const fetchTrumpAndBidenTweets=async()=>{
+}
+export const fetchTrumpAndBidenTweets=async()=>{
     const [trumpTweets, bidenTweets] = await Promise.all([
         fetchTweets('trump'),
         fetchTweets('biden'),
@@ -36,4 +36,4 @@ export const fetchArticles = async (query: string) => {
         trump: trumpTweets,
         biden: bidenTweets,
       };
-  }
+}

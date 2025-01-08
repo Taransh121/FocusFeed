@@ -1,56 +1,109 @@
+// const puppeteer = require('puppeteer');
+// const Article = require('../Models/article'); // MongoDB Article model
+
+// exports.scrapeCNN = async (req, res) => {
+//     const query = req.query.query || 'Trump'; // Default query
+
+//     const browser = await puppeteer.launch({ headless: false, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+//     const page = await browser.newPage();
+
+//     try {
+//         console.log(`Navigating to CNN search page for query: ${query}...`);
+//         const searchUrl = `https://edition.cnn.com/search?q=${query}`;
+//         await page.goto(searchUrl, { waitUntil: 'networkidle0' });
+
+//         console.log("Waiting for search results to load...");
+//         await page.waitForSelector('.search__results', { timeout: 60000 });
+
+//         console.log("Scraping articles...");
+//         const articles = await page.evaluate(() => {
+//             return Array.from(document.querySelectorAll('.card')).map(el => {
+//                 const title = el.querySelector('.container__headline-text')?.textContent.trim() || null;
+//                 const link = el.querySelector('a.container__link')?.href || null;
+//                 return { title, link, date: new Date().toISOString() }; // Add timestamp for each article
+//             }).filter(article => article.title && article.link); // Ensure both title and link exist
+//         });
+
+//         if (!articles || articles.length === 0) {
+//             console.warn("No articles found for the query.");
+//             return res.status(200).json({ success: true, data: [] });
+//         }
+
+//         console.log("Storing articles in MongoDB...");
+//         await Article.insertMany(articles, { ordered: false }).catch(err => {
+//             if (err.code !== 11000) throw err; // Ignore duplicate entries
+//         });
+
+//         console.log(`Successfully stored ${articles.length} articles.`);
+//         return res.status(200).json({ message: "Articles scraped and stored successfully", data: articles });
+//     } catch (error) {
+//         console.error("An error occurred during the CNN scraping process:", error);
+//         await page.screenshot({ path: 'cnn_error_screenshot.png' }); // Save a screenshot for debugging
+//         return res.status(500).json({ error: "Scraping failed. Check server logs and screenshot for details." });
+//     } finally {
+//         await browser.close();
+//     }
+// };
+
 const puppeteer = require('puppeteer');
-const Article = require('../Models/article');
+const Article = require('../Models/article'); // MongoDB Article model
 
 exports.scrapeCNN = async (req, res) => {
+    const query = req.query.query || 'both'; // Default query to scrape articles for both Trump and Biden
+
+    const browser = await puppeteer.launch({ headless: false, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    const page = await browser.newPage();
+
     try {
-        const query = req.query.query || 'Trump'; // Default to 'Trump' if no query parameter is passed
+        console.log("Starting CNN scraping...");
 
-        // const browser = await puppeteer.launch({ headless: false });
-        const browser = await puppeteer.launch({ headless: true });
-        const page = await browser.newPage();
+        // Function to scrape articles based on the query
+        const scrapeArticles = async (searchQuery) => {
+            const searchUrl = `https://edition.cnn.com/search?q=${searchQuery}`;
+            console.log(`Navigating to search page: ${searchUrl}`);
+            await page.goto(searchUrl, { waitUntil: 'networkidle0', timeout: 60000 });
 
-        // Go to CNN search page with the query parameter
-        await page.goto(`https://edition.cnn.com/search?q=${query}`, { waitUntil: 'networkidle2' });
-        // await page.goto(`https://edition.cnn.com/search?q=${query}`, { waitUntil: 'domcontentloaded' });
+            console.log("Waiting for search results to load...");
+            await page.waitForSelector('.search__results', { timeout: 60000 });
 
-        // Ensure the page has enough time to load dynamic content
-        // await page.waitForTimeout(3000);
+            console.log("Scraping articles...");
+            return await page.evaluate(() => {
+                return Array.from(document.querySelectorAll('.card')).map(el => {
+                    const title = el.querySelector('.container__headline-text')?.textContent.trim() || null;
+                    const link = el.querySelector('a.container__link')?.href || null;
+                    return { title, link, date: new Date().toISOString() }; // Add timestamp for each article
+                }).filter(article => article.title && article.link); // Ensure both title and link exist
+            });
+        };
 
-        // Wait for the results list to load using the correct selector
-        await page.waitForSelector('.search__results', { timeout: 20000 });
-        // await page.waitForSelector('.search__results', { timeout: 2000 });
+        let allArticles = [];
 
-        // Extract articles using the correct selectors
-        const articleElementsCount = await page.evaluate(() => {
-            const a = document.querySelectorAll('.card').innerHTML;
-            console.log(a);
-            return a;
-        });
-        console.log('Article Elements Count:', articleElementsCount);
-        const articles = await page.evaluate(() => {
-            const articleElements = Array.from(document.querySelectorAll('.card'));
-            return articleElements.map(el => ({
-                title: el.querySelector('.container__headline-text')?.textContent.trim(),
-                link: el.querySelector('a.container__link')?.href,
-            })).filter(article => article.title && article.link); // Filter out incomplete entries
-        });
+        // Handle "both" case where we scrape articles for both Trump and Biden
+        if (query === 'both') {
+            const trumpArticles = await scrapeArticles('Trump');
+            const bidenArticles = await scrapeArticles('Biden');
+            allArticles = [...trumpArticles, ...bidenArticles]; // Combine articles for both queries
+        } else {
+            allArticles = await scrapeArticles(query); // Scrape only for the specified query
+        }
 
-        await browser.close();
-        // Log and handle cases where no articles are found
-        if (!articles || articles.length === 0) {
-            console.warn('No articles found for the query.');
+        if (!allArticles || allArticles.length === 0) {
+            console.warn("No articles found for the query.");
             return res.status(200).json({ success: true, data: [] });
         }
-        // Check if there are articles and save them to the database
-        if (articles.length > 0) {
-            await Article.insertMany(articles, { ordered: false }).catch(err => {
-                if (err.code !== 11000) throw err; // Ignore duplicates
-            });
-        }
 
-        // Send the scraped articles in the response
-        res.status(200).json({ success: true, data: articles });
+        console.log("Storing articles in MongoDB...");
+        await Article.insertMany(allArticles, { ordered: false }).catch(err => {
+            if (err.code !== 11000) throw err; // Ignore duplicate entries
+        });
+
+        console.log(`Successfully stored ${allArticles.length} articles.`);
+        return res.status(200).json({ message: "Articles scraped and stored successfully", data: allArticles });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Failed to fetch articles. Please try again later.' });
+        console.error("An error occurred during the CNN scraping process:", error);
+        await page.screenshot({ path: 'cnn_error_screenshot.png' }); // Save a screenshot for debugging
+        return res.status(500).json({ error: "Scraping failed. Check server logs and screenshot for details." });
+    } finally {
+        await browser.close();
     }
 };

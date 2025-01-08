@@ -28,7 +28,7 @@ exports.scrapeTwitter = async (req, res) => {
             return res.status(500).json({ error: "Login failed." });
         }
 
-        // Helper function to scrape tweets from a specific search term
+        //Function to scrape tweets from a specific search term
         const scrapeTweets = async (searchQuery) => {
             const searchUrl = `https://x.com/search?q=${searchQuery}&src=typed_query&f=live`;
             console.log(`Navigating to search page: ${searchUrl}`);
@@ -56,7 +56,7 @@ exports.scrapeTwitter = async (req, res) => {
         if (searchType === 'both') {
             const trumpTweets = await scrapeTweets('trump');
             const bidenTweets = await scrapeTweets('biden');
-            topTweets = [...trumpTweets, ...bidenTweets];  // Combine the tweets for both Trump and Biden
+            topTweets = [...trumpTweets, ...bidenTweets];  // Combining the tweets for both Trump and Biden
         } else {
             topTweets = await scrapeTweets(searchType);  // Scrape only the specified search type (Trump or Biden)
         }
