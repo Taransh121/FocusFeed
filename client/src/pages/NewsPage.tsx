@@ -42,7 +42,7 @@ const NewsPage: React.FC = () => {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Scraped CNN News</h1>
         <Link
-          to="/"
+          to="/tweets"
           className="px-4 py-2 bg-black text-white rounded hover:bg-red-600"
         >
           Go to Tweets Page

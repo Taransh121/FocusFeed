@@ -61,7 +61,7 @@ const TweetsPage: React.FC = () => {
     <div className="p-6 bg-gradient-to-r from-green-50 to-green-100 min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Scraped Tweets</h1>
-        <Link to="/news" className="px-4 py-2 bg-black text-white rounded hover:bg-red-600">
+        <Link to="/" className="px-4 py-2 bg-black text-white rounded hover:bg-red-600">
           Go to News Page
         </Link>
       </div>
