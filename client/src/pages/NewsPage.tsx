@@ -14,7 +14,7 @@ const NewsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [view, setView] = useState<'both' | 'trump' | 'biden'>('both');
-  const isFetchCalled = useRef(false); // Prevent duplicate API calls
+  const isFetchCalled = useRef(false); // Prevent duplicate API calls. useRef persists a value across renders without causing re-renders.
 
   useEffect(() => {
     if (isFetchCalled.current) return; // Avoid duplicate API calls
@@ -34,7 +34,7 @@ const NewsPage: React.FC = () => {
     };
 
     fetchData();
-  }, []); // Runs only once on component mount
+  }, []); 
 
   return (
     <div className="p-6 bg-gradient-to-r from-blue-50 to-blue-100 min-h-screen">

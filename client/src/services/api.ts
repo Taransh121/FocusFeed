@@ -8,6 +8,7 @@ export const fetchArticles = async (query: string) => {
   
   // Fetch both Trump and Biden articles
 export const fetchTrumpAndBidenArticles = async () => {
+  // Promise.all ensures both requests run simultaneously, improving performance compared to sequential execution.
     const [trumpArticles, bidenArticles] = await Promise.all([
       fetchArticles('trump'),
       fetchArticles('biden'),

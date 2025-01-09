@@ -14,7 +14,7 @@ const TweetsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [view, setView] = useState<'both' | 'trump' | 'biden'>('both');
-  const isFetchCalled = useRef(false); // Persistent flag to prevent duplicate calls.
+  const isFetchCalled = useRef(false); // Prevent duplicate API calls. useRef persists a value across renders without causing re-renders.
 
   useEffect(() => {
     if (isFetchCalled.current) return; // Avoid duplicate API calls.
@@ -34,7 +34,7 @@ const TweetsPage: React.FC = () => {
     };
 
     fetchData();
-  }, []); // Empty dependency array ensures it runs only once on mount.
+  }, []); 
 
   const renderTweets = (tweets: Tweet[]) => (
     <ul>

@@ -12,6 +12,7 @@ interface ArticleListProps {
 }
 
 const ArticleList: React.FC<ArticleListProps> = ({ articles }) => {
+  //sentiment library does analysis and predicts whether the text/news is positive,neutral or negative.
   const sentiment = new Sentiment();
 
   const getSentiment = (title: string) => {

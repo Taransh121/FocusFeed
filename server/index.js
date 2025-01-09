@@ -12,7 +12,7 @@ dotenv.config();
 app.use(cors());
 app.use(express.json());
 
-// Database
+// Database connection
 mongoose.set('strictQuery', false);
 const mongoURL = `mongodb+srv://Taransh121:${process.env.MongoDB_Password}@taransh7.7lstu.mongodb.net/?retryWrites=true&w=majority&appName=Taransh7`;
 

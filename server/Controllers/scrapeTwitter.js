@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer');
-const Tweet = require('../Models/tweet'); // MongoDB Tweet model
+const Tweet = require('../Models/tweet');
 
 exports.scrapeTwitter = async (req, res) => {
     const searchType = req.query.search || 'both';
@@ -35,6 +35,7 @@ exports.scrapeTwitter = async (req, res) => {
             await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 60000 });
 
             return await page.evaluate(() => {
+                //We are selecting all article elements and then iterating over each element to extract info.
                 return Array.from(document.querySelectorAll('article'))
                     .map(tweet => {
                         const contentElement = tweet.querySelector('div[lang]');
@@ -46,7 +47,7 @@ exports.scrapeTwitter = async (req, res) => {
                             date: new Date().toISOString(), // Current timestamp
                         };
                     })
-                    .filter(tweet => tweet.text && tweet.link); // Ensure we have both content and URL
+                    .filter(tweet => tweet.text && tweet.link); // Ensuring we have both content and URL
             });
         };
 
@@ -58,11 +59,11 @@ exports.scrapeTwitter = async (req, res) => {
             const bidenTweets = await scrapeTweets('biden');
             topTweets = [...trumpTweets, ...bidenTweets];  // Combining the tweets for both Trump and Biden
         } else {
-            topTweets = await scrapeTweets(searchType);  // Scrape only the specified search type (Trump or Biden)
+            topTweets = await scrapeTweets(searchType);  // Scraping only the specified search type (Trump or Biden)
         }
 
         console.log("Storing tweets in MongoDB...");
-        // Save each tweet to MongoDB
+        // Saving each tweet to MongoDB
         const savedTweets = await Tweet.insertMany(topTweets);
 
         console.log(`Successfully stored ${savedTweets.length} tweets.`);
