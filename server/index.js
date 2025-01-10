@@ -5,6 +5,7 @@ const dotenv = require("dotenv"); // For using process.env
 const scrapeRoutes = require('./Routes/scrapeNewsRoutes');
 const scrapeTwitterRoutes = require('./Routes/scrapeTwitterRoutes');
 
+
 const app = express();
 
 // Middleware

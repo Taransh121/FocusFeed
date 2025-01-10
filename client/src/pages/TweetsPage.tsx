@@ -47,7 +47,7 @@ const TweetsPage: React.FC = () => {
             rel="noopener noreferrer"
             className="text-blue-500 hover:underline text-sm"
           >
-            View Tweet
+            View 
           </a>
           <p className="text-gray-400 text-xs mt-1">
             Date: {new Date(tweet.date).toLocaleString()}
